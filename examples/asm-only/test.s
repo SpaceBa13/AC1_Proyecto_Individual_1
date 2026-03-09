@@ -1,6 +1,15 @@
+.section .data
+state:
+.word 0,1,2,3
+.word 4,5,6,7
+.word 8,9,10,11
+.word 12,13,14,15
+
 .section .text
 .globl _start
 _start:
+
+
     call quarter_round
     call end
 
@@ -13,17 +22,11 @@ rotate_left:
     ret
     
 quarter_round:
-    #a
-    li t3, 0x11111111
-
-    #b
-    li t4, 0x01020304
-
-    #c
-    li t5, 0x9b8d6f43
-
-    #d
-    li t6, 0x01234567
+    la s0, state     # Load address of state into s0
+    lw t3, 4(s0)     # state[1] -> a
+    lw t4, 20(s0)    # state[5] -> b
+    lw t5, 36(s0)    # state[9] -> c
+    lw t6, 52(s0)    # state[13] -> d
 
     #1
     add t3, t3, t4      # a = a + b
@@ -34,7 +37,6 @@ quarter_round:
     mv t6 , a0          # update d with result of rotate left
 
     #2
-
     add t5, t5, t6      # c = c + d
     xor t4, t4, t5      # b = b xor c
     mv a0 , t4          # arg for rotate left (b)
@@ -55,8 +57,13 @@ quarter_round:
     xor t4, t4, t5     # b = b XOR c
     mv a0, t4          # arg for rotate left (b)
     li a1, 7           # n for rotate left (7)
-    call rotate_left    # b = rotate_left(b, 7)
+    call rotate_left   # b = rotate_left(b, 7)
     mv t4, a0          # update b with result of rotate left
+
+    sw t3, 4(s0)        # save state[1] = a
+    sw t4, 20(s0)       # save state[5] = b
+    sw t5, 36(s0)       # save state[9] = c
+    sw t6, 52(s0)       # save state[13] = d
 
     ret
 
