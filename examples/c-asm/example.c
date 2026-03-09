@@ -4,6 +4,10 @@
 // Assembly function declaration
 extern int sum_to_n(int n);
 
+// Assembly function declaration
+extern int rotate_left(int x, int n);
+
+
 // Simple implementation of basic functions since we're in bare-metal environment
 void print_char(char c) {
     // In a real bare-metal environment, this would write to UART
@@ -61,8 +65,33 @@ void main() {
         print_number(result);
         print_string("\n");
     }
-    
+
+    // Ahora probamos rotate_left
+    int rot_tests[][2] = {
+        {0x12345678, 4},
+        {0xdeadbeef, 8},
+        {0x01020304, 16},
+    };
+    int num_rot = 3;
+
+    print_string("Testing rotate_left assembly function:\n");
+
+    for (int i = 0; i < num_rot; i++) {
+        int x = rot_tests[i][0];
+        int n = rot_tests[i][1];
+        int r = rotate_left(x, n);
+        
+        print_string("rotate_left(0x");
+        print_number(x);
+        print_string(", ");
+        print_number(n);
+        print_string(") = 0x");
+        print_number(r);
+        print_string("\n");
+    }
+
     print_string("Tests completed.\n");
+    
     
     // Infinite loop to keep program running
     while (1) {

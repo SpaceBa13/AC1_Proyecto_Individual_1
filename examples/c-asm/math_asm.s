@@ -25,7 +25,8 @@ loop_sum:
     add s2, s2, s1    # sum += counter
     addi s1, s1, 1    # counter++
     ble s1, s0, loop_sum  # if counter <= n, continue loop
-    
+
+
 end_sum:
     # Return value in a0
     mv a0, s2
@@ -36,4 +37,27 @@ end_sum:
     lw s0, 8(sp)
     lw ra, 12(sp)
     addi sp, sp, 16
+    ret
+
+
+.section .text
+.globl rotate_left
+# int rotate_left(int x, int n)
+rotate_left:
+
+    # t0 = x << n
+    sll t0, a0, a1
+
+    # t1 = 32
+    li t1, 32
+
+    # t1 = 32 - n
+    sub t1, t1, a1
+
+    # t2 = x >> (32-n)
+    srl t2, a0, t1
+
+    # a0 = resultado
+    or a0, t0, t2
+
     ret
