@@ -9,7 +9,26 @@ state:
 .globl _start
 _start:
 
+    la s0, state # Load address of state into s0 for use in quarter_round function
 
+    # Test cases for quarter_round function
+    # a
+    li t0, 0x11111111
+    sw t0, 4(s0)      # state[1]
+
+    # b
+    li t0, 0x01020304
+    sw t0, 20(s0)     # state[5]
+
+    # c
+    li t0, 0x9b8d6f43
+    sw t0, 36(s0)     # state[9]
+
+    # d
+    li t0, 0x01234567
+    sw t0, 52(s0)     # state[13]
+    
+    # call quarter round
     call quarter_round
     call end
 
@@ -22,7 +41,6 @@ rotate_left:
     ret
     
 quarter_round:
-    la s0, state     # Load address of state into s0
     lw t3, 4(s0)     # state[1] -> a
     lw t4, 20(s0)    # state[5] -> b
     lw t5, 36(s0)    # state[9] -> c
