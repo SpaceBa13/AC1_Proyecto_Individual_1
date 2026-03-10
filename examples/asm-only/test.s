@@ -11,8 +11,7 @@ _start:
 
     la s0, state # Load address of state into s0 for use in quarter_round function
 
-
-    # Starting matri
+    # Starting matrix
 
     li t0, 0x879531e0
     sw t0, 0(s0)
@@ -69,7 +68,7 @@ _start:
     li a3, 13 # w = 13
     
     # call to compute the addresses of the state elements for the quarter round
-    call compute_adresses
+    call compute_addresses
 
     # call to load the state values into t3, t4, t5, t6 for the quarter round
     call assign_addresses
@@ -89,6 +88,7 @@ rotate_left:
     ret
     
 quarter_round:
+    # The quarter round function operates on the state elements at the addresses in s1, s2, s3, s4
     #1
     add t3, t3, t4     # a = a + b
     xor t6, t6, t3     # d = d XOR a
@@ -130,16 +130,12 @@ quarter_round:
 
 compute_addresses:
     # Compute the addresses of the state elements for the quarter round
-
     slli t0, a0, 2      # t0 = x * 4
     add  s1, s0, t0     # s1 = &state[x]
-
     slli t0, a1, 2
     add  s2, s0, t0     # s2 = &state[y]
-
     slli t0, a2, 2
     add  s3, s0, t0     # s3 = &state[z]
-
     slli t0, a3, 2
     add  s4, s0, t0     # s4 = &state[w]
 
@@ -156,4 +152,3 @@ assign_addresses:
 end:
     j end
     # The program ends here, but we loop infinitely to keep the QEMU session alive.
-
