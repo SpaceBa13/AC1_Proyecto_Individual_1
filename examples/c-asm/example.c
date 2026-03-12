@@ -1,12 +1,12 @@
 // Simple C program that calls assembly function
 // This demonstrates C+assembly integration in RISC-V
 
-// Assembly function declaration
-extern int sum_to_n(int n);
 
-// Assembly function declaration
-extern int rotate_left(int x, int n);
+// ChaCha20 assembly function
+extern void chacha20_block();
 
+// Buffer generado en ASM
+extern unsigned char serialized_block[64];
 
 // Simple implementation of basic functions since we're in bare-metal environment
 void print_char(char c) {
@@ -47,48 +47,38 @@ void print_string(const char* str) {
     }
 }
 
+void print_hex_byte(unsigned char b) {
+    char hex[] = "0123456789abcdef";
+    print_char(hex[(b >> 4) & 0xF]);
+    print_char(hex[b & 0xF]);
+}
+
+
 // Entry point for C program
 void main() {
-    // Test the assembly function with different values
-    int test_values[] = {5, 10, 15, 0, -1};
-    int num_tests = 5;
-    
-    print_string("Testing sum_to_n assembly function:\n");
-    
-    for (int i = 0; i < num_tests; i++) {
-        int n = test_values[i];
-        int result = sum_to_n(n);
-        
-        print_string("sum_to_n(");
-        print_number(n);
-        print_string(") = ");
-        print_number(result);
-        print_string("\n");
+
+    // -----------------------------
+    // Test ChaCha20 block
+    // -----------------------------
+
+    print_string("Generating ChaCha20 block...\n");
+
+    chacha20_block();
+
+    print_string("Serialized Block:\n");
+
+    for (int i = 0; i < 64; i++) {
+
+        if (i % 16 == 0) {
+            print_string("\n");
+        }
+
+        print_hex_byte(serialized_block[i]);
+        print_char(' ');
     }
 
-    // Ahora probamos rotate_left
-    int rot_tests[][2] = {
-        {0x12345678, 4},
-        {0xdeadbeef, 8},
-        {0x01020304, 16},
-    };
-    int num_rot = 3;
+    print_string("\n\nChaCha20 block test completed.\n");
 
-    print_string("Testing rotate_left assembly function:\n");
-
-    for (int i = 0; i < num_rot; i++) {
-        int x = rot_tests[i][0];
-        int n = rot_tests[i][1];
-        int r = rotate_left(x, n);
-        
-        print_string("rotate_left(0x");
-        print_number(x);
-        print_string(", ");
-        print_number(n);
-        print_string(") = 0x");
-        print_number(r);
-        print_string("\n");
-    }
 
     print_string("Tests completed.\n");
     

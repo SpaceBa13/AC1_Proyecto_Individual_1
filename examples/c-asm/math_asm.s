@@ -1,63 +1,100 @@
-# Assembly function to calculate sum from 1 to n
-# Function signature: int sum_to_n(int n)
-# a0 = input parameter n
-# a0 = return value
+.section .data
+
+state:
+    # constants
+    .word 0x61707865, 0x3320646e, 0x79622d32, 0x6b206574
+    # key
+    .word 0x03020100, 0x07060504, 0x0b0a0908, 0x0f0e0d0c
+    .word 0x13121110, 0x17161514, 0x1b1a1918, 0x1f1e1d1c
+    # counter + nonce
+    .word 0x00000001, 0x09000000, 0x4a000000, 0x00000000
+
+working_state:
+    .word 0,0,0,0
+    .word 0,0,0,0
+    .word 0,0,0,0
+    .word 0,0,0,0
+
+.globl serialized_block
+serialized_block:
+    .space 64
 
 .section .text
-.globl sum_to_n
-sum_to_n:
-    # Save return address
+copy_state_to_working:
+    la t0, state           # t0 apunta al inicio de state
+    la t1, working_state   # t1 apunta al inicio de working_state
+    li t2, 16              # contador de palabras
+
+copy_loop:
+    lw t3, 0(t0)           # cargar palabra de state
+    sw t3, 0(t1)           # almacenar palabra en working_state
+    addi t0, t0, 4         # avanzar al siguiente elemento de state
+    addi t1, t1, 4         # avanzar al siguiente elemento de working_state
+    addi t2, t2, -1        # decrementar contador
+    bnez t2, copy_loop      # repetir hasta copiar las 16 palabras
+    ret
+
+add_working_to_state:
+    la t4, state
+    la t5, working_state
+    li t0, 0
+loop_add:
+    lw t1, 0(t4)
+    lw t2, 0(t5)
+    add t1, t1, t2
+    sw t1, 0(t4)
+    addi t4, t4, 4
+    addi t5, t5, 4
+    addi t0, t0, 1
+    li t3, 16
+    blt t0, t3, loop_add
+    ret
+
+loop_inner_block:
     addi sp, sp, -16
-    sw ra, 12(sp)
-    sw s0, 8(sp)
-    sw s1, 4(sp)
-    sw s2, 0(sp)
-    
-    # Initialize variables
-    mv s0, a0      # s0 = n (input parameter)
-    li s1, 1       # s1 = counter (start from 1)
-    li s2, 0       # s2 = sum accumulator
-    
-    # Check if n <= 0
-    blez s0, end_sum
-    
-loop_sum:
-    add s2, s2, s1    # sum += counter
-    addi s1, s1, 1    # counter++
-    ble s1, s0, loop_sum  # if counter <= n, continue loop
+    sw ra, 12(sp)   # proteger ra
+    sw s5, 8(sp)    # opcional: proteger s5
 
+loop_start:
+    la s0, working_state
+    call inner_block
+    addi s5, s5, -1
+    bnez s5, loop_start
 
-end_sum:
-    # Return value in a0
-    mv a0, s2
-    
-    # Restore registers and return
-    lw s2, 0(sp)
-    lw s1, 4(sp)
-    lw s0, 8(sp)
-    lw ra, 12(sp)
+    lw s5, 8(sp)    # restaurar s5
+    lw ra, 12(sp)   # restaurar ra
     addi sp, sp, 16
     ret
 
 
-.section .text
-.globl rotate_left
-# int rotate_left(int x, int n)
-rotate_left:
+.globl chacha20_block
+chacha20_block:
+    addi sp, sp, -16
+    sw ra, 12(sp)   # proteger ra
+    # This block implements the ChaCha20 principal block function
+    call copy_state_to_working
+    li s5, 10
+    call loop_inner_block
+    call add_working_to_state
+    call serialize_state
+    lw ra, 12(sp)   # restaurar ra
+    addi sp, sp, 16
+    ret
 
-    # t0 = x << n
-    sll t0, a0, a1
 
-    # t1 = 32
-    li t1, 32
+.globl serialize_state
+serialize_state:
+# This function serializes the state into a contiguous block of memory
+    la t0, state              # origen
+    la t1, serialized_block   # destino
+    li t2, 16                 # 16 words
 
-    # t1 = 32 - n
-    sub t1, t1, a1
-
-    # t2 = x >> (32-n)
-    srl t2, a0, t1
-
-    # a0 = resultado
-    or a0, t0, t2
-
+serialize_loop:
+# This loop serializes the state into a contiguous block of memory
+    lw t3, 0(t0)              # cargar word
+    sw t3, 0(t1)              # guardar word
+    addi t0, t0, 4
+    addi t1, t1, 4
+    addi t2, t2, -1
+    bnez t2, serialize_loop
     ret
