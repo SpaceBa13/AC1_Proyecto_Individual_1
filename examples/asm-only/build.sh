@@ -10,6 +10,7 @@ riscv64-unknown-elf-gcc \
     -g \
     test.s \
     quarter_round.s \
+    inner_block.s \
     -T linker.ld \
     -o test.elf
 
