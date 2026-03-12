@@ -1,3 +1,4 @@
+
 .section .data
 
 state:
@@ -15,6 +16,10 @@ working_state:
     .word 0,0,0,0
     .word 0,0,0,0
 
+serialized_block:
+    .space 64
+
+
 .section .text
 .globl _start
 _start:
@@ -24,62 +29,6 @@ _start:
     call chacha20_block
     call end
 
-rotate_left:
-    sll t0, a0, a1     # t0 = x << n
-    li t1, 32          # t1 = 32
-    sub t1, t1, a1     # t1 = 32 - n
-    srl t2, a0, t1     # t2 = x >> (32-n)
-    or a0, t0, t2      # a0 = result
-    ret
-    
-quarter_round:
-    addi sp, sp, -16   # reservar espacio en stack
-    sw ra, 12(sp)      # salvar ra
-    sw s1, 8(sp)       # opcional: salvar registros usados
-    sw s2, 4(sp)
-    sw s3, 0(sp)
-
-    # The quarter round function operates on the state elements at the addresses in s1, s2, s3, s4
-    #1
-    add t3, t3, t4     # a = a + b
-    xor t6, t6, t3     # d = d XOR a
-    mv a0 , t6         # arg for rotate left (d)
-    li a1, 16          # n for rotate left (16)
-    call rotate_left   # d = rotate_left(d, 16)
-    mv t6 , a0         # update d with result of rotate left
-
-    #2
-    add t5, t5, t6     # c = c + d
-    xor t4, t4, t5     # b = b xor c
-    mv a0 , t4         # arg for rotate left (b)
-    li a1, 12          # n for rotate left (12)
-    call rotate_left   # b = rotate_left(b, 12)
-    mv t4 , a0         # update b with result of rotate left
-
-    #3
-    add t3 , t3, t4    # a = a + b
-    xor t6, t6, t3     # d = d XOR a   
-    mv a0, t6          # arg for rotate left (d)
-    li a1, 8           # n for rotate left (8)
-    call rotate_left   # d = rotate_left(d, 8)
-    mv t6, a0          # update d with result of rotate left
-
-    #4
-    add t5, t5, t6     # c = c + d
-    xor t4, t4, t5     # b = b XOR c
-    mv a0, t4          # arg for rotate left (b)
-    li a1, 7           # n for rotate left (7)
-    call rotate_left   # b = rotate_left(b, 7)
-    mv t4, a0          # update b with result of rotate left
-
-    sw t3, 0(s1)       # save state[x] = a
-    sw t4, 0(s2)       # save state[y] = b
-    sw t5, 0(s3)       # save state[z] = c
-    sw t6, 0(s4)       # save state[w] = d
-
-    lw ra, 12(sp)      # restaurar ra
-    addi sp, sp, 16    # liberar espacio
-    ret
 
 compute_addresses:
     # Compute the addresses of the state elements for the quarter round
@@ -243,12 +192,38 @@ loop_start:
 
 
 chacha20_block:
+    addi sp, sp, -16
+    sw ra, 12(sp)   # proteger ra
     # This block implements the ChaCha20 principal block function
     call copy_state_to_working
     li s5, 10
     call loop_inner_block
     call add_working_to_state
+    call serialize_state
+    lw ra, 12(sp)   # restaurar ra
+    addi sp, sp, 16
     ret
+
+
+serialize_state:
+# This function serializes the state into a contiguous block of memory
+    la t0, state              # origen
+    la t1, serialized_block   # destino
+    li t2, 16                 # 16 words
+
+serialize_loop:
+# This loop serializes the state into a contiguous block of memory
+    lw t3, 0(t0)              # cargar word
+    sw t3, 0(t1)              # guardar word
+
+    addi t0, t0, 4
+    addi t1, t1, 4
+
+    addi t2, t2, -1
+    bnez t2, serialize_loop
+    lw ra, 12(sp)   # restaurar ra
+    ret
+
 
 end:
     j end
