@@ -1,6 +1,24 @@
 // Simple C program that calls assembly function
 // This demonstrates C+assembly integration in RISC-V
 
+typedef unsigned int uint32_t;
+
+
+uint32_t key[8] = {
+    0x03020100, 0x07060504, 0x0b0a0908, 0x0f0e0d0c,
+    0x13121110, 0x17161514, 0x1b1a1918, 0x1f1e1d1c
+};
+
+
+uint32_t nonce[3] = {
+    0x09000000,
+    0x4a000000,
+    0x00000000
+};
+
+uint32_t counter = 1;
+
+unsigned char message[] = "Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it.";
 
 // ChaCha20 assembly function
 extern void chacha20_block();

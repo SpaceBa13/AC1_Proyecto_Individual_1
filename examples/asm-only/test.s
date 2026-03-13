@@ -1,4 +1,3 @@
-
 .section .data
 
 state:
@@ -28,7 +27,6 @@ _start:
     li sp, 0x80010000  # stack seguro en memoria libre
     call chacha20_block
     call end
-
 
 copy_state_to_working:
     la t0, state           # t0 apunta al inicio de state
@@ -89,7 +87,6 @@ chacha20_block:
     addi sp, sp, 16
     ret
 
-
 serialize_state:
 # This function serializes the state into a contiguous block of memory
     la t0, state              # origen
@@ -100,15 +97,11 @@ serialize_loop:
 # This loop serializes the state into a contiguous block of memory
     lw t3, 0(t0)              # cargar word
     sw t3, 0(t1)              # guardar word
-
     addi t0, t0, 4
     addi t1, t1, 4
-
     addi t2, t2, -1
     bnez t2, serialize_loop
-    lw ra, 12(sp)   # restaurar ra
     ret
-
 
 end:
     j end

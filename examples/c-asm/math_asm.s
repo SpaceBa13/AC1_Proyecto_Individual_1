@@ -1,13 +1,21 @@
 .section .data
 
+
+
+.extern key
+.extern nonce
+.extern counter
+
+
 state:
     # constants
     .word 0x61707865, 0x3320646e, 0x79622d32, 0x6b206574
     # key
-    .word 0x03020100, 0x07060504, 0x0b0a0908, 0x0f0e0d0c
-    .word 0x13121110, 0x17161514, 0x1b1a1918, 0x1f1e1d1c
-    # counter + nonce
-    .word 0x00000001, 0x09000000, 0x4a000000, 0x00000000
+    .space 32
+    # counter
+    .space 4
+    # nonce
+    .space 12
 
 working_state:
     .word 0,0,0,0
@@ -71,6 +79,55 @@ loop_start:
 chacha20_block:
     addi sp, sp, -16
     sw ra, 12(sp)   # proteger ra
+
+
+    # Load key, counter, and nonce into the state
+    la t1, key
+    la t2, state
+
+    # key
+    lw t0, 0(t1) 
+    sw t0, 16(t2)
+
+    lw t0, 4(t1)
+    sw t0, 20(t2)
+
+    lw t0, 8(t1)
+    sw t0, 24(t2)
+
+    lw t0, 12(t1)
+    sw t0, 28(t2)
+
+    lw t0, 16(t1)
+    sw t0, 32(t2)
+
+    lw t0, 20(t1)
+    sw t0, 36(t2)
+
+    lw t0, 24(t1)
+    sw t0, 40(t2)
+
+    lw t0, 28(t1)
+    sw t0, 44(t2)
+
+    # counter
+    la t1, counter
+    lw t0, 0(t1)
+    sw t0, 48(t2)
+
+    # nonce
+    la t1, nonce
+
+    lw t0, 0(t1)
+    sw t0, 52(t2)
+
+    lw t0, 4(t1)
+    sw t0, 56(t2)
+
+    lw t0, 8(t1)
+    sw t0, 60(t2)
+
+
     # This block implements the ChaCha20 principal block function
     call copy_state_to_working
     li s5, 10
@@ -98,3 +155,4 @@ serialize_loop:
     addi t2, t2, -1
     bnez t2, serialize_loop
     ret
+
