@@ -342,3 +342,4 @@ xor_loop:
     lw s7, 0(sp)
     addi sp, sp, 8
     ret
+    
