@@ -1,6 +1,8 @@
 // Simple C program that calls assembly function
 // This demonstrates C+assembly integration in RISC-V
 
+extern unsigned char cyphered_block[64];
+
 typedef unsigned int uint32_t;
 
 uint32_t key[8] = {
@@ -9,7 +11,7 @@ uint32_t key[8] = {
 };
 
 uint32_t nonce[3] = {
-    0x09000000,
+    0x00000000,
     0x4a000000,
     0x00000000
 };
@@ -23,6 +25,8 @@ unsigned int message_len = sizeof(message) - 1;
 // ChaCha20 assembly function
 extern void chacha20_block(uint32_t *key, uint32_t *counter, uint32_t *nonce);
 
+extern void chacha20_encrypt(uint32_t *key, uint32_t *counter, uint32_t *nonce, unsigned char *plaintext, unsigned int length);
+
 // Buffer generado en ASM
 extern unsigned char serialized_block[64];
 
@@ -33,6 +37,7 @@ void print_char(char c) {
     volatile char *uart = (volatile char*)0x10000000;
     *uart = c;
 }
+
 
 void print_number(int num) {
     if (num == 0) {
@@ -71,10 +76,42 @@ void print_hex_byte(unsigned char b) {
     print_char(hex[b & 0xF]);
 }
 
+void print_block(unsigned char *block) {
+
+    for (int i = 0; i < 64; i++) {
+
+        if (i % 16 == 0) {
+            print_string("\n");
+        }
+
+        print_hex_byte(block[i]);
+        print_char(' ');
+    }
+
+    print_string("\n");
+}
+
+
 
 // Entry point for C program
 void main() {
 
+    // calcular longitud manualmente
+    unsigned int len = 0;
+    while (message[len] != '\0') {
+        len++;
+    }
+    
+    
+
+    // -----------------------------
+    // Test ChaCha20 Encryption
+    // -----------------------------
+
+    print_string("Encrypting message...\n");
+    chacha20_encrypt(key, &counter, nonce, message, len);
+
+    /*
     // -----------------------------
     // Test ChaCha20 block
     // -----------------------------
@@ -84,7 +121,7 @@ void main() {
     chacha20_block(key,&counter, nonce);
 
     print_string("Serialized Block:\n");
-
+    
     for (int i = 0; i < 64; i++) {
 
         if (i % 16 == 0) {
@@ -96,6 +133,8 @@ void main() {
     }
 
     print_string("\n\nChaCha20 block test completed.\n");
+
+    */
 
 
     print_string("Tests completed.\n");
