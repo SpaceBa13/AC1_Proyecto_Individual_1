@@ -217,16 +217,17 @@ loop_start:
 .globl chacha20_encrypt
 chacha20_encrypt:
     # Save registers to stack to preserve caller state
-    addi sp, sp, -36
-    sw ra, 32(sp)
-    sw s0, 28(sp)
-    sw s1, 24(sp)
-    sw s2, 20(sp)
-    sw s3, 16(sp)
-    sw s4, 12(sp)
-    sw s5, 8(sp)
-    sw s6, 4(sp)
-    sw s7, 0(sp)
+    addi sp, sp, -40
+    sw ra, 36(sp)
+    sw s0, 32(sp)
+    sw s1, 28(sp)
+    sw s2, 24(sp)
+    sw s3, 20(sp)
+    sw s4, 16(sp)
+    sw s5, 12(sp)
+    sw s6, 8(sp)
+    sw s7, 4(sp)
+    sw s8, 0(sp)
 
     # Save input parameters in callee-saved registers
     mv s0, a0        # key pointer
@@ -254,27 +255,54 @@ loop_chacha_encrypt:
     mv a2, s2
     call chacha20_block
     # Encrypt the block using the keystream
-    call encrypt_message
+
+
+    # Prepare useful bytes to encrypt the last block if it's less than 64 bytes
+    slli t4, s7, 6                  # t4 = block_index * 64 → byte offset of the current block
+    sub t4, s4, t4                  # t4 = remaining bytes from this block to the end of the message
+    li t5, 64                       # t5 = size of a full block (64 bytes)
+    blt t4, t5, block_less_than_64  # If remaining bytes < 64, jump to partial block handling
+
+    # Normal case: full 64-byte block
+    mv a0, t5                       # a0 = number of bytes to encrypt for this block
+    li s8, 64                       # s8 = number of bytes to be used for printing later
+    call encrypt_message            # Call the XOR function to encrypt the block
+    j continue_after_encrypt        # Skip the partial block section
+
+    block_less_than_64:
+    # Final block: partial block with fewer than 64 bytes
+    mv t3, t4                       # t3 = number of useful bytes to process in this block
+    mv s8, t3                       # Save the useful byte count in s8 for printing
+    mv a0, t3                       # Pass the number of bytes to encrypt to encrypt_message
+    call encrypt_message            # Call the XOR function with the adjusted number of bytes
+
+    continue_after_encrypt:
+    # Continue normal flow after encrypting the block (full or partial)
+
     # Print the encrypted block using C function
     la a0, cyphered_block
+    mv a1, s8
     call print_block
     # Increment block index
     addi s7, s7, 1
     bne s7, s5, loop_chacha_encrypt
     # Restore registers before returning
-    lw s7, 0(sp)
-    lw s6, 4(sp)
-    lw s5, 8(sp)
-    lw s4, 12(sp)
-    lw s3, 16(sp)
-    lw s2, 20(sp)
-    lw s1, 24(sp)
-    lw s0, 28(sp)
-    lw ra, 32(sp)
-    addi sp, sp, 36
+    lw s8, 0(sp)
+    lw s7, 4(sp)
+    lw s6, 8(sp)
+    lw s5, 12(sp)
+    lw s4, 16(sp)
+    lw s3, 20(sp)
+    lw s2, 24(sp)
+    lw s1, 28(sp)
+    lw s0, 32(sp)
+    lw ra, 36(sp)
+    addi sp, sp, 40
     ret
 
 # This function performs the XOR of a 64-byte plaintext block with the keystream block
+# inputs:
+#  a0: useful bytes to encrypt (adjusted for last block if < 64)
 # Registers used as inputs:
 #   s3: pointer to the plaintext buffer
 #   s7: current block index (used to calculate offset into plaintext)
@@ -283,13 +311,12 @@ encrypt_message:
     addi sp, sp, -8
     sw s3, 4(sp)
     sw s7, 0(sp)
-
     la t0, serialized_block     # pointer to the keystream block
     mv t1, s3                   # base pointer to plaintext
     slli t6, s7, 6              # calculate block_offset = block_index * 64
     add t1, t1, t6              # adjust plaintext pointer for current block
     la t2, cyphered_block       # pointer to output buffer
-    li t3, 64                   # number of bytes per block
+    mv t3, a0                   # number of bytes to encrypt in this block
 
 # Loop: XOR each byte of plaintext with the corresponding keystream byte
 # Registers:

@@ -27,9 +27,6 @@ extern void chacha20_block(uint32_t *key, uint32_t *counter, uint32_t *nonce);
 
 extern void chacha20_encrypt(uint32_t *key, uint32_t *counter, uint32_t *nonce, unsigned char *plaintext, unsigned int length);
 
-// Buffer generado en ASM
-extern unsigned char serialized_block[64];
-
 // Simple implementation of basic functions since we're in bare-metal environment
 void print_char(char c) {
     // In a real bare-metal environment, this would write to UART
@@ -76,9 +73,10 @@ void print_hex_byte(unsigned char b) {
     print_char(hex[b & 0xF]);
 }
 
-void print_block(unsigned char *block) {
+// Imprime un bloque de bytes en hexadecimal, limitado a 'length' bytes
+void print_block(unsigned char *block, unsigned int length) {
 
-    for (int i = 0; i < 64; i++) {
+    for (unsigned int i = 0; i < length; i++) {
 
         if (i % 16 == 0) {
             print_string("\n");
