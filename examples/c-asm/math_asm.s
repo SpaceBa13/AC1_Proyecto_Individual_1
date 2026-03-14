@@ -1,15 +1,12 @@
 .section .data
 
 
-
-.extern key
-.extern nonce
-.extern counter
-
+original_constants:
+    .word 0x61707865, 0x3320646e, 0x79622d32, 0x6b206574
 
 state:
     # constants
-    .word 0x61707865, 0x3320646e, 0x79622d32, 0x6b206574
+    .word 0, 0, 0, 0
     # key
     .space 32
     # counter
@@ -77,56 +74,61 @@ loop_start:
 
 .globl chacha20_block
 chacha20_block:
+    # inputs: a0 key, a1 counter, a2 nonce
     addi sp, sp, -16
     sw ra, 12(sp)   # proteger ra
+    sw s0, 8(sp)
+    sw s1, 4(sp)
+    sw s2, 0(sp)
 
+    mv s0, a0        # s0 = key pointer
+    mv s1, a1        # s1 = counter pointer
+    mv s2, a2        # s2 = nonce pointer
 
-    # Load key, counter, and nonce into the state
-    la t1, key
-    la t2, state
+    # Load constants on state (0-15)
+    la t1, original_constants      # t1 = &constants[0]
+    la t2, state                   # t2 = &state[0]
 
-    # key
-    lw t0, 0(t1) 
-    sw t0, 16(t2)
+    lw t0, 0(t1)                   # Load constant0
+    sw t0, 0(t2)                   # state[0] = 0x61707865
+    lw t0, 4(t1)                   # Load constant1
+    sw t0, 4(t2)                   # state[1] = 0x3320646e
+    lw t0, 8(t1)                   # Load constant2
+    sw t0, 8(t2)                   # state[2] = 0x79622d32
+    lw t0, 12(t1)                  # Load constant3
+    sw t0, 12(t2)                  # state[3] = 0x6b206574
 
-    lw t0, 4(t1)
-    sw t0, 20(t2)
+    # Load KEY en state (16-47)
+    lw t0, 0(s0)       # Load key[0]
+    sw t0, 16(t2)      # Store at state[4]
+    lw t0, 4(s0)       # Load key[1]
+    sw t0, 20(t2)      # Store at state[5]
+    lw t0, 8(s0)       # Load key[2]
+    sw t0, 24(t2)      # Store at state[6]
+    lw t0, 12(s0)      # Load key[3]
+    sw t0, 28(t2)      # Store at state[7]
+    lw t0, 16(s0)      # Load key[4]
+    sw t0, 32(t2)      # Store at state[8]
+    lw t0, 20(s0)      # Load key[5]
+    sw t0, 36(t2)      # Store at state[9]
+    lw t0, 24(s0)      # Load key[6]
+    sw t0, 40(t2)      # Store at state[10]
+    lw t0, 28(s0)      # Load key[7]
+    sw t0, 44(t2)      # Store at state[11] 
 
-    lw t0, 8(t1)
-    sw t0, 24(t2)
+    # Cargar COUNTER en state (48-51)
+    # counter está en s1
+    lw t0, 0(s1)       # Load counter value
+    sw t0, 48(t2)      # Store at state[12]
 
-    lw t0, 12(t1)
-    sw t0, 28(t2)
-
-    lw t0, 16(t1)
-    sw t0, 32(t2)
-
-    lw t0, 20(t1)
-    sw t0, 36(t2)
-
-    lw t0, 24(t1)
-    sw t0, 40(t2)
-
-    lw t0, 28(t1)
-    sw t0, 44(t2)
-
-    # counter
-    la t1, counter
-    lw t0, 0(t1)
-    sw t0, 48(t2)
-
-    # nonce
-    la t1, nonce
-
-    lw t0, 0(t1)
-    sw t0, 52(t2)
-
-    lw t0, 4(t1)
-    sw t0, 56(t2)
-
-    lw t0, 8(t1)
-    sw t0, 60(t2)
-
+    # Cargar NONCE en state (52-63)
+    # nonce está en s2
+    lw t0, 0(s2)       # Load nonce[0]
+    sw t0, 52(t2)      # Store at state[13]
+    lw t0, 4(s2)       # Load nonce[1]
+    sw t0, 56(t2)      # Store at state[14]
+    lw t0, 8(s2)       # Load nonce[2]
+    sw t0, 60(t2)      # Store at state[15]
 
     # This block implements the ChaCha20 principal block function
     call copy_state_to_working
@@ -134,7 +136,11 @@ chacha20_block:
     call loop_inner_block
     call add_working_to_state
     call serialize_state
-    lw ra, 12(sp)   # restaurar ra
+
+    lw s2, 0(sp)
+    lw s1, 4(sp)
+    lw s0, 8(sp)
+    lw ra, 12(sp)
     addi sp, sp, 16
     ret
 

@@ -3,12 +3,10 @@
 
 typedef unsigned int uint32_t;
 
-
 uint32_t key[8] = {
     0x03020100, 0x07060504, 0x0b0a0908, 0x0f0e0d0c,
     0x13121110, 0x17161514, 0x1b1a1918, 0x1f1e1d1c
 };
-
 
 uint32_t nonce[3] = {
     0x09000000,
@@ -20,8 +18,10 @@ uint32_t counter = 1;
 
 unsigned char message[] = "Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it.";
 
+unsigned int message_len = sizeof(message) - 1;
+
 // ChaCha20 assembly function
-extern void chacha20_block();
+extern void chacha20_block(uint32_t *key, uint32_t *counter, uint32_t *nonce);
 
 // Buffer generado en ASM
 extern unsigned char serialized_block[64];
@@ -81,7 +81,7 @@ void main() {
 
     print_string("Generating ChaCha20 block...\n");
 
-    chacha20_block();
+    chacha20_block(key,&counter, nonce);
 
     print_string("Serialized Block:\n");
 
