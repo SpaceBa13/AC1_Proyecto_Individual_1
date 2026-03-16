@@ -1,6 +1,30 @@
-
+# ------------------------------------------------------------
+# Implements the inner block of the ChaCha20 algorithm.
+#
+# The inner block performs 8 quarter rounds on the 4x4 state
+# matrix in the following order:
+#   - 4 column rounds
+#   - 4 diagonal rounds
+#
+# In the full ChaCha20 algorithm, this function is executed
+# 10 times to complete the 20 rounds of the cipher.
+#
+# Inputs:
+#   s0 : pointer to the working_state array (16 x 32-bit words)
+#
+# Uses:
+#   s1-s4 : store addresses of state elements for quarter rounds
+#
+# Temporaries:
+#   t3-t6 : hold state values used in quarter_round
+#   a0-a3 : indices (x, y, z, w) passed as parameters to helper functions
+#
+# Stack:
+#   Saves callee-saved registers and return address
+# ------------------------------------------------------------
 .globl inner_block
 inner_block:
+    # Allocate stack space and save registers
     addi sp, sp, -24
     sw ra, 20(sp)
     sw s0, 16(sp)
@@ -8,107 +32,156 @@ inner_block:
     sw s2, 8(sp)
     sw s3, 4(sp)
     sw s4, 0(sp)
-    # This block makes the quarter round in specific order for the inner block of the ChaCha20 algorithm, which operates on columns of the state matrix
+
+    # --------------------------------------------------------
+    # Column rounds
+    # --------------------------------------------------------
+
     # Quarter round on (0, 4, 8, 12)
-    # set the index for quarter round
-    li a0, 0        # x = 0
-    li a1, 4        # y = 4
-    li a2, 8        # z = 8
-    li a3, 12       # w = 12
-
-    # call to compute the addresses of the state elements for the quarter round
+    li a0, 0
+    li a1, 4
+    li a2, 8
+    li a3, 12
     call compute_addresses
-
-    # call to load the state values into t3, t4, t5, t6 for the quarter round
     call assign_addresses
-
-    # call quarter round
     call quarter_round
-
-    ######### This structure is the same for rest of the quarter rounds, so this section aint gonna be commented again #####
 
     # Quarter round on (1, 5, 9, 13)
-    li a0, 1        # x = 1
-    li a1, 5        # y = 5
-    li a2, 9        # z = 9
-    li a3, 13       # w = 13
-    call compute_addresses
-    call assign_addresses
-    call quarter_round
-    # Quarter round on (2, 6, 10, 14)
-    li a0, 2        # x = 2
-    li a1, 6        # y = 6
-    li a2, 10       # z = 10
-    li a3, 14       # w = 14
-    call compute_addresses
-    call assign_addresses
-    call quarter_round
-    # Quarter round on (3, 7, 11, 15)
-    li a0, 3        # x = 3
-    li a1, 7        # y = 7
-    li a2, 11       # z = 11
-    li a3, 15       # w = 15
-    call compute_addresses
-    call assign_addresses
-    call quarter_round
-    # Quarter round on (0, 5, 10, 15)
-    li a0, 0        # x = 0
-    li a1, 5        # y = 5
-    li a2, 10       # z = 10
-    li a3, 15       # w = 15
-    call compute_addresses
-    call assign_addresses
-    call quarter_round
-    # Quarter round on (1, 6, 11, 12)
-    li a0, 1        # x = 1
-    li a1, 6        # y = 6
-    li a2, 11       # z = 11
-    li a3, 12       # w = 12
-    call compute_addresses
-    call assign_addresses
-    call quarter_round
-    # Quarter round on (2, 7, 8, 13)
-    li a0, 2        # x = 2
-    li a1, 7        # y = 7
-    li a2, 8        # z = 8
-    li a3, 13       # w = 13
-    call compute_addresses
-    call assign_addresses
-    call quarter_round
-    # Quarter round on (3, 4, 9, 14)
-    li a0, 3        # x = 3
-    li a1, 4        # y = 4
-    li a2, 9        # z = 9
-    li a3, 14       # w = 14
+    li a0, 1
+    li a1, 5
+    li a2, 9
+    li a3, 13
     call compute_addresses
     call assign_addresses
     call quarter_round
 
-    # restaurar registros
+    # Quarter round on (2, 6, 10, 14)
+    li a0, 2
+    li a1, 6
+    li a2, 10
+    li a3, 14
+    call compute_addresses
+    call assign_addresses
+    call quarter_round
+
+    # Quarter round on (3, 7, 11, 15)
+    li a0, 3
+    li a1, 7
+    li a2, 11
+    li a3, 15
+    call compute_addresses
+    call assign_addresses
+    call quarter_round
+
+    # --------------------------------------------------------
+    # Diagonal rounds
+    # --------------------------------------------------------
+
+    # Quarter round on (0, 5, 10, 15)
+    li a0, 0
+    li a1, 5
+    li a2, 10
+    li a3, 15
+    call compute_addresses
+    call assign_addresses
+    call quarter_round
+
+    # Quarter round on (1, 6, 11, 12)
+    li a0, 1
+    li a1, 6
+    li a2, 11
+    li a3, 12
+    call compute_addresses
+    call assign_addresses
+    call quarter_round
+
+    # Quarter round on (2, 7, 8, 13)
+    li a0, 2
+    li a1, 7
+    li a2, 8
+    li a3, 13
+    call compute_addresses
+    call assign_addresses
+    call quarter_round
+
+    # Quarter round on (3, 4, 9, 14)
+    li a0, 3
+    li a1, 4
+    li a2, 9
+    li a3, 14
+    call compute_addresses
+    call assign_addresses
+    call quarter_round
+
+    # Restore registers and return
     lw s4, 0(sp)
     lw s3, 4(sp)
     lw s2, 8(sp)
     lw s1, 12(sp)
     lw s0, 16(sp)
     lw ra, 20(sp)
+
     addi sp, sp, 24
     ret
 
+
+# ------------------------------------------------------------
+# Computes the memory addresses of the state elements used in
+# a ChaCha20 quarter round.
+#
+# Parameters:
+#   a0 : position x in the state array
+#   a1 : position y in the state array
+#   a2 : position z in the state array
+#   a3 : position w in the state array
+#
+# Uses:
+#   s0 : pointer to the working_state array
+#
+# Outputs:
+#   s1 : address of state[x]
+#   s2 : address of state[y]
+#   s3 : address of state[z]
+#   s4 : address of state[w]
+#
+# Temporaries:
+#   t0 : used to compute byte offsets (index * 4)
+# ------------------------------------------------------------
 compute_addresses:
-    # Compute the addresses of the state elements for the quarter round
-    slli t0, a0, 2      # t0 = x * 4
-    add  s1, s0, t0     # s1 = &state[x]
+    # Compute address of state[x]
+    slli t0, a0, 2
+    add  s1, s0, t0
+    # Compute address of state[y]
     slli t0, a1, 2
-    add  s2, s0, t0     # s2 = &state[y]
+    add  s2, s0, t0
+    # Compute address of state[z]
     slli t0, a2, 2
-    add  s3, s0, t0     # s3 = &state[z]
+    add  s3, s0, t0
+    # Compute address of state[w]
     slli t0, a3, 2
-    add  s4, s0, t0     # s4 = &state[w]
+    add  s4, s0, t0
     ret
 
 
+
+# ------------------------------------------------------------
+# Loads the state values from memory for the ChaCha20
+# quarter round computation.
+#
+# Inputs:
+#   s1 : address of state[x]
+#   s2 : address of state[y]
+#   s3 : address of state[z]
+#   s4 : address of state[w]
+#
+# Outputs:
+#   t3 : a = state[x]
+#   t4 : b = state[y]
+#   t5 : c = state[z]
+#   t6 : d = state[w]
+# ------------------------------------------------------------
 assign_addresses:
-    # Load the state values into t3, t4, t5, t6 for the quarter round
+    # Load state values
     lw t3, 0(s1)    # a = state[x]
     lw t4, 0(s2)    # b = state[y]
     lw t5, 0(s3)    # c = state[z]

@@ -15,6 +15,6 @@ qemu-system-riscv32 \
     -machine virt \
     -nographic \
     -bios none \
-    -kernel example.elf \
+    -kernel chacha_program.elf \
     -S \
     -gdb tcp::1234

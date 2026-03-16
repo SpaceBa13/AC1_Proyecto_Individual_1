@@ -1,0 +1,60 @@
+
+#Corre solamente el ensambaldor (Terminal 1)
+chmod +x run.sh
+./run.sh
+cd /home/rvqemu-dev/workspace/examples/asm-only
+./build.sh
+./run-qemu.sh
+
+# Terminal 2
+docker exec -it rvqemu /bin/bash
+cd /home/rvqemu-dev/workspace/examples/asm-only
+gdb-multiarch test.elf
+
+
+########################################################
+
+#Corre el ensambaldor y el archivo C (Terminal 1)
+chmod +x run.sh
+./run.sh
+cd /home/rvqemu-dev/workspace/examples/c-asm
+./build.sh
+./run-qemu.sh
+
+
+# Terminal 2
+docker exec -it rvqemu /bin/bash
+cd /home/rvqemu-dev/workspace/examples/c-asm
+gdb-multiarch example.elf
+
+
+#Comandos utiles 
+
+target remote :1234
+break _start
+break main
+break sum_to_n
+layout asm
+layout regs
+continue
+step
+step
+info registers
+continue
+step
+info registers
+monitor quit
+quit
+
+
+
+#Consultar State
+continue
+x/16wx $s0
+info registers s5
+
+x/64bx &serialized_block
+
+x/16bx (unsigned char *)$t2  # ver los primeros 16 bytes del bloque cifrado
+x/16bx (unsigned char *)$t1  # ver los primeros 16 bytes del plaintext actual
+x/16bx (unsigned char *)$t0  # ver los primeros 16 bytes del keystream
