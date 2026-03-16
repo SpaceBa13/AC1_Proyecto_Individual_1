@@ -22,6 +22,10 @@ unsigned char message[] = "Ladies and Gentlemen of the class of '99: If I could 
 
 unsigned int message_len = sizeof(message) - 1;
 
+unsigned char encrypted_message[sizeof(message) - 1];
+
+unsigned int encrypted_index = 0;   // global write position
+
 // ChaCha20 assembly function
 extern void chacha20_block(uint32_t *key, uint32_t *counter, uint32_t *nonce);
 
@@ -73,21 +77,54 @@ void print_hex_byte(unsigned char b) {
     print_char(hex[b & 0xF]);
 }
 
-// Imprime un bloque de bytes en hexadecimal, limitado a 'length' bytes
 void print_block(unsigned char *block, unsigned int length) {
+
+    static char ascii[16];
 
     for (unsigned int i = 0; i < length; i++) {
 
-        if (i % 16 == 0) {
-            print_string("\n");
+        if (encrypted_index % 16 == 0) {
+
+            if (encrypted_index != 0) {
+                print_string(" ");
+                for (int j = 0; j < 16; j++) {
+                    print_char(ascii[j]);
+                }
+                print_string("\n");
+            }
         }
 
-        print_hex_byte(block[i]);
+        unsigned char b = block[i];
+
+        encrypted_message[encrypted_index] = b;
+
+        print_hex_byte(b);
         print_char(' ');
+
+        if (b >= 32 && b <= 126)
+            ascii[encrypted_index % 16] = b;
+        else
+            ascii[encrypted_index % 16] = '.';
+
+        encrypted_index++;
     }
 
-    print_string("\n");
+    int remaining = encrypted_index % 16;
+
+    if (remaining != 0) {
+
+        for (int i = remaining; i < 16; i++) {
+            print_string("   ");
+        }
+
+        print_string(" ");
+        for (int i = 0; i < remaining; i++) {
+            print_char(ascii[i]);
+        }
+        print_string("\n");
+    }
 }
+
 
 
 
@@ -106,8 +143,19 @@ void main() {
     // Test ChaCha20 Encryption
     // -----------------------------
 
+    print_string("Original message:\n");
+    print_string((char*)message);
+    print_string("\n\n");
     print_string("Encrypting message...\n");
     chacha20_encrypt(key, &counter, nonce, message, len);
+
+    print_string("Decrypting message...\n");
+    // Reset counter for decryption
+    counter = 1;
+    encrypted_index = 0;
+    chacha20_encrypt(key, &counter, nonce, encrypted_message, len);
+
+
 
     /*
     // -----------------------------
