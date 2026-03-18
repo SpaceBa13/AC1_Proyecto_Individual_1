@@ -133,23 +133,14 @@ void print_hex_byte(unsigned char b) {
     print_char(hex[b & 0xF]);
 }
 
-void print_hex(uint32_t value) {
-    char hex[] = "0123456789abcdef";
-    for (int i = 7; i >= 0; i--) {
-        volatile char *uart = (volatile char*)0x10000000; // UART ficticio
-        *uart = hex[(value >> (i*4)) & 0xF];
-    }
-    volatile char *uart = (volatile char*)0x10000000;
-    *uart = '\n';
-}
-
+// Prints a 32-bit unsigned integer in hexadecimal format (8 hex digits).
+// Uses print_char to output each hexadecimal digit.
 void print_hex_uint32(uint32_t x) {
     char hex[] = "0123456789abcdef";
     for (int i = 7; i >= 0; i--) {
         print_char(hex[(x >> (i*4)) & 0xF]);
     }
 }
-
 
 // ------------------------------------------------------------
 // C function used by ASM code
@@ -234,6 +225,8 @@ void print_block(unsigned char *block, unsigned int length) {
     }
 }
 
+// Saves a serialized 64-byte ChaCha20 block into the global keystream buffer.
+// The block is stored starting at the current encrypted_index position.
 void save_serialized(unsigned char *block)
 {
     for (int i = 0; i < 64; i++)
@@ -243,6 +236,8 @@ void save_serialized(unsigned char *block)
 }
 
 
+// Saves the current ChaCha20 state (16 uint32 words) into the blocks buffer.
+// The position is determined by the current block index derived from encrypted_index.
 void save_state(uint32_t *state)
 {
     unsigned int block = encrypted_index / 64;
@@ -254,6 +249,8 @@ void save_state(uint32_t *state)
 }
 
 
+// Prints the internal ChaCha20 state blocks used during encryption.
+// Each block consists of 16 uint32 values (512 bits) displayed in hexadecimal format.
 void print_blocks(int message_len, uint32_t *blocks)
 {
     unsigned int num_blocks = (message_len + 63) / 64;
@@ -274,6 +271,9 @@ void print_blocks(int message_len, uint32_t *blocks)
     }
 }
 
+
+// Prints the generated keystream in hexadecimal byte format.
+// Bytes are separated by ':' and grouped in lines of 16 bytes.
 void print_keystream(int message_len, unsigned char *keystream)
 {
     for (unsigned int i = 0; i < message_len; i++)
@@ -293,7 +293,6 @@ void print_keystream(int message_len, unsigned char *keystream)
 // ------------------------------------------------------------
 
 void main() {
-
 
     // -----------------------------
     // Test Quarter Round Function (Vector de prueba del RFC)
@@ -335,8 +334,6 @@ void main() {
 
     encrypted_index = 0;
 
-    // Test Vector #1
-
     for (int i = 0; i < 8; i++)
         key[i] = 0;
 
@@ -345,8 +342,6 @@ void main() {
 
     counter = 0;
 
-
-    // Manually calculate the length of the message (similar to strlen)
     unsigned int len = 64;
 
     print_string("\n\n");
