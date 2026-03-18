@@ -1,4 +1,8 @@
 
+.extern save_state
+
+.extern save_serialized
+
 # This function sets up and executes a single ChaCha20 block
 # Inputs (via RISC-V ABI):
 #   a0: pointer to key[8] (32-bit words)
@@ -71,6 +75,14 @@ chacha20_block:
     call loop_inner_block        # perform 20 quarter-rounds
     call add_working_to_state    # add working_state -> state
     call serialize_state         # convert state[16] -> serialized_block[64]
+
+    # --- Save the state and serialized block for debugging ---
+
+    la a0, state
+    call save_state
+
+    la a0, serialized_block
+    call save_serialized
 
     # --- Epilogue: restore callee-saved registers ---
     lw s5, 0(sp)

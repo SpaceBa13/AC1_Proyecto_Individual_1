@@ -1,6 +1,4 @@
 
-
-
 # ------------------------------------------------------------
 # Implements the ChaCha20 quarter round operation.
 #
@@ -8,10 +6,10 @@
 # using additions, XOR operations, and bit rotations.
 #
 # Inputs:
-#   s1 : address of state[x]
-#   s2 : address of state[y]
-#   s3 : address of state[z]
-#   s4 : address of state[w]
+#   a0 : address of state[x]
+#   a1 : address of state[y]
+#   a2 : address of state[z]
+#   a3 : address of state[w]
 #
 # Uses:
 #   t3 : a
@@ -24,13 +22,20 @@
 # ------------------------------------------------------------
 .globl quarter_round
 quarter_round:
-
     addi sp, sp, -20
     sw ra, 16(sp)
     sw s1, 12(sp)
     sw s2, 8(sp)
     sw s3, 4(sp)
     sw s4, 0(sp)
+
+    # ---------------------------
+    # Load values from a0..a3 to t3..t6
+    # ---------------------------
+    mv t3, a0      # t3 = a
+    mv t4, a1      # t4 = b
+    mv t5, a2      # t5 = c
+    mv t6, a3      # t6 = d
 
     # --------------------------------------------------------
     # Quarter round operations
@@ -113,4 +118,73 @@ rotate_left:
     srl t2, a0, t1     # t2 = x >> (32 - n)
     # Combine both parts to obtain rotation
     or a0, t0, t2      # result = (x << n) | (x >> (32 - n))
+    ret
+
+
+
+
+.globl quarter_round_c
+quarter_round_c:
+    # Guardar registros callee-saved
+    addi sp, sp, -16
+    sw ra, 12(sp)
+    sw s0, 8(sp)
+    sw s1, 4(sp)
+    sw s2, 0(sp)
+
+    # Guardar punteros originales
+    mv s0, a0   # s0 = ptr a
+    mv s1, a1   # s1 = ptr b
+    mv s2, a2   # s2 = ptr c
+    mv s3, a3   # s3 = ptr d
+
+    # Cargar valores de memoria a temporales
+    lw t3, 0(s0)  # a
+    lw t4, 0(s1)  # b
+    lw t5, 0(s2)  # c
+    lw t6, 0(s3)  # d
+
+    # ---------------------------
+    # Quarter round operations
+    # ---------------------------
+    add t3, t3, t4
+    xor t6, t6, t3
+    mv a0, t6
+    li a1, 16
+    call rotate_left
+    mv t6, a0
+
+    add t5, t5, t6
+    xor t4, t4, t5
+    mv a0, t4
+    li a1, 12
+    call rotate_left
+    mv t4, a0
+
+    add t3, t3, t4
+    xor t6, t6, t3
+    mv a0, t6
+    li a1, 8
+    call rotate_left
+    mv t6, a0
+
+    add t5, t5, t6
+    xor t4, t4, t5
+    mv a0, t4
+    li a1, 7
+    call rotate_left
+    mv t4, a0
+
+    # Guardar resultados de vuelta a memoria usando punteros originales
+    sw t3, 0(s0)
+    sw t4, 0(s1)
+    sw t5, 0(s2)
+    sw t6, 0(s3)
+
+    # Restaurar registros
+    lw s2, 0(sp)
+    lw s1, 4(sp)
+    lw s0, 8(sp)
+    lw ra, 12(sp)
+    addi sp, sp, 16
     ret

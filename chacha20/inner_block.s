@@ -43,7 +43,6 @@ inner_block:
     li a2, 8
     li a3, 12
     call compute_addresses
-    call assign_addresses
     call quarter_round
 
     # Quarter round on (1, 5, 9, 13)
@@ -52,7 +51,6 @@ inner_block:
     li a2, 9
     li a3, 13
     call compute_addresses
-    call assign_addresses
     call quarter_round
 
     # Quarter round on (2, 6, 10, 14)
@@ -61,7 +59,6 @@ inner_block:
     li a2, 10
     li a3, 14
     call compute_addresses
-    call assign_addresses
     call quarter_round
 
     # Quarter round on (3, 7, 11, 15)
@@ -70,7 +67,6 @@ inner_block:
     li a2, 11
     li a3, 15
     call compute_addresses
-    call assign_addresses
     call quarter_round
 
     # --------------------------------------------------------
@@ -83,7 +79,6 @@ inner_block:
     li a2, 10
     li a3, 15
     call compute_addresses
-    call assign_addresses
     call quarter_round
 
     # Quarter round on (1, 6, 11, 12)
@@ -92,7 +87,6 @@ inner_block:
     li a2, 11
     li a3, 12
     call compute_addresses
-    call assign_addresses
     call quarter_round
 
     # Quarter round on (2, 7, 8, 13)
@@ -101,7 +95,6 @@ inner_block:
     li a2, 8
     li a3, 13
     call compute_addresses
-    call assign_addresses
     call quarter_round
 
     # Quarter round on (3, 4, 9, 14)
@@ -110,7 +103,6 @@ inner_block:
     li a2, 9
     li a3, 14
     call compute_addresses
-    call assign_addresses
     call quarter_round
 
     # Restore registers and return
@@ -160,9 +152,6 @@ compute_addresses:
     # Compute address of state[w]
     slli t0, a3, 2
     add  s4, s0, t0
-    ret
-
-
 
 # ------------------------------------------------------------
 # Loads the state values from memory for the ChaCha20
@@ -186,4 +175,11 @@ assign_addresses:
     lw t4, 0(s2)    # b = state[y]
     lw t5, 0(s3)    # c = state[z]
     lw t6, 0(s4)    # d = state[w]
+
+    # Prepare the parameters for quarter_round
+    mv a0, t3       # a0 = a
+    mv a1, t4       # a1 = b
+    mv a2, t5       # a2 = c
+    mv a3, t6       # a3 = d
+
     ret
