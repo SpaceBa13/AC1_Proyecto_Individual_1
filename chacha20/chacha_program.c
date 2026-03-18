@@ -194,9 +194,9 @@ void print_block(unsigned char *block, unsigned int length) {
         encrypted_index++;
     }
 
-   int remaining = encrypted_index % 16;
+    int remaining = encrypted_index % 16;
 
-    // Case 1: line incomplete
+    // Only print ASCII if the line is incomplete
     if (remaining != 0) {
 
         for (int i = remaining; i < 16; i++) {
@@ -207,18 +207,6 @@ void print_block(unsigned char *block, unsigned int length) {
 
         for (int i = 0; i < remaining; i++) {
             print_char(ascii[i]);
-        }
-
-        print_string("\n");
-    }
-
-    // Case 2: line exactly full
-    else if (encrypted_index != 0) {
-
-        print_string(" ");
-
-        for (int j = 0; j < 16; j++) {
-            print_char(ascii[j]);
         }
 
         print_string("\n");
@@ -295,15 +283,19 @@ void print_keystream(int message_len, unsigned char *keystream)
 void main() {
 
     // -----------------------------
-    // Test Quarter Round Function (Vector de prueba del RFC)
+    // Test Quarter Round Function (RFC Test Vector)
     // -----------------------------
+    print_string("// -----------------------------\n");
+    print_string("// Test Quarter Round Function (RFC Test Vector)\n");
+    print_string("// -----------------------------\n");
+
     uint32_t a = 0x11111111;
     uint32_t b = 0x01020304;
     uint32_t c = 0x9b8d6f43;
     uint32_t d = 0x01234567;
 
     // Imprimir valores originales
-    print_string("Original Vector values:\n");
+    print_string("// Original Vector values:\n");
     print_hex_uint32(a); // 0x11111111
     print_char('\n');
     print_hex_uint32(b); // 0x01020304
@@ -317,7 +309,7 @@ void main() {
     quarter_round_c(&a, &b, &c, &d);
 
     // Print the results after the quarter round operation
-    print_string("Quarter Round result:\n");
+    print_string("// Quarter Round result:\n");
     print_hex_uint32(a); // 0xea2a92f4
     print_char('\n');
     print_hex_uint32(b); // 0xcb1cf8ce
@@ -329,8 +321,12 @@ void main() {
 
 
     // -----------------------------
-    // Test ChaCha20 Encryption (Vector #1 del RFC 8439 Apendice A.2)
+    // Test ChaCha20 Encryption (RFC 8439 Appendix A.2 - Vector #1)
     // -----------------------------
+    print_string("// -----------------------------\n");
+    print_string("// Test ChaCha20 Encryption (RFC 8439 Appendix A.2 - Vector #1)\n");
+    print_string("// -----------------------------\n");
+
 
     encrypted_index = 0;
 
@@ -346,13 +342,13 @@ void main() {
 
     print_string("\n\n");
     // Print original plaintext message
-    print_string("Original message:\n");
+    print_string("// Original message:\n");
     print_string((char*)message_2);
     print_string("\n\n");
 
 
     // Encrypt the message using ChaCha20
-    print_string("Encrypting message...\n");
+    print_string("// Encrypting message...\n");
     chacha20_encrypt(key, &counter, nonce, message_2, len);
 
     // ---- DEBUG OUTPUT ---- 
@@ -365,11 +361,16 @@ void main() {
     
     // Encrypt the message using ChaCha20
     print_string("Vector #1 test completed.\n");
+        print_string("\n");
+
 
 
     // -----------------------------
-    // Test ChaCha20 Encryption (Vector #2 del RFC 8439 Apendice A.2)
+    // Test ChaCha20 Encryption (RFC 8439 Appendix A.2 - Vector #2)
     // -----------------------------
+    print_string("// -----------------------------\n");
+    print_string("// Test ChaCha20 Encryption (RFC 8439 Appendix A.2 - Vector #2)\n");
+    print_string("// -----------------------------\n");
 
     // Key
     key[0] = 0x00000000;
@@ -400,13 +401,13 @@ void main() {
 
     print_string("\n\n");
     // Print original plaintext message
-    print_string("Original message:\n");
+    print_string("// Original message:\n");
     print_string((char*)message_1);
     print_string("\n\n");
 
 
     // Encrypt the message using ChaCha20
-    print_string("Encrypting message...\n");
+    print_string("// Encrypting message...\n");
     chacha20_encrypt(key, &counter, nonce, message_1, len);
 
     // ---- DEBUG OUTPUT ---- 
@@ -418,7 +419,7 @@ void main() {
 
 
     // Decrypt the message
-    print_string("Decrypting message...\n");
+    print_string("// Decrypting message...\n");
 
     // Reset counter to initial value for correct decryption
     counter = 1;
@@ -436,7 +437,7 @@ void main() {
     print_keystream(len, keystream);
     print_string("\n\n");
 
-    print_string("Tests completed.\n");
+    print_string("// Tests completed.\n");
     
     
     // Infinite loop to keep program running
