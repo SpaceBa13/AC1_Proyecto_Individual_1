@@ -330,7 +330,7 @@ void main() {
 
 
     // -----------------------------
-    // Test ChaCha20 Encryption (Vector del RFC 8439 Apendice A.2)
+    // Test ChaCha20 Encryption (Vector #1 del RFC 8439 Apendice A.2)
     // -----------------------------
 
     encrypted_index = 0;
@@ -372,21 +372,61 @@ void main() {
     print_string("Vector #1 test completed.\n");
 
 
+    // -----------------------------
+    // Test ChaCha20 Encryption (Vector #2 del RFC 8439 Apendice A.2)
+    // -----------------------------
+
+    // Key
+    key[0] = 0x00000000;
+    key[1] = 0x00000000;
+    key[2] = 0x00000000;
+    key[3] = 0x00000000;
+    key[4] = 0x00000000;
+    key[5] = 0x00000000;
+    key[6] = 0x00000000;
+    key[7] = 0x01000000;
+
+    // Nonce
+    nonce[0] = 0x00000000;
+    nonce[1] = 0x00000000;
+    nonce[2] = 0x02000000;
+
+    // Reset index used for storing encrypted bytes
+    encrypted_index = 0;
+
+    // Counter
+    counter = 1;
+
+    len = 0;
+
+    while (message_1[len] != '\0') {
+        len++;
+    }
+
+    print_string("\n\n");
+    // Print original plaintext message
+    print_string("Original message:\n");
+    print_string((char*)message_1);
+    print_string("\n\n");
 
 
+    // Encrypt the message using ChaCha20
+    print_string("Encrypting message...\n");
+    chacha20_encrypt(key, &counter, nonce, message_1, len);
 
-
-
-
-
-
+    // ---- DEBUG OUTPUT ---- 
+    print_string("\nGenerated ChaCha20 blocks:\n"); 
+    print_blocks(len, blocks); 
+    print_string("\nGenerated keystream:\n"); 
+    print_keystream(len, keystream);
+    print_string("\n\n");
 
 
     // Decrypt the message
     print_string("Decrypting message...\n");
 
     // Reset counter to initial value for correct decryption
-    counter = 0;
+    counter = 1;
 
     // Reset index used for storing encrypted bytes
     encrypted_index = 0;
@@ -394,39 +434,12 @@ void main() {
     // Decrypt by encrypting the ciphertext again with the same key and nonce
     chacha20_encrypt(key, &counter, nonce, encrypted_message, len);
 
-
     // ---- DEBUG OUTPUT ---- 
     print_string("\nGenerated ChaCha20 blocks:\n"); 
-    print_blocks(len, blocks_2); 
+    print_blocks(len, blocks); 
     print_string("\nGenerated keystream:\n"); 
-    print_keystream(len, keystream_2);
+    print_keystream(len, keystream);
     print_string("\n\n");
-
-
-    /*
-    // -----------------------------
-    // Test ChaCha20 block
-    // -----------------------------
-
-    print_string("Generating ChaCha20 block...\n");
-
-    chacha20_block(key,&counter, nonce);
-
-    print_string("Serialized Block:\n");
-    
-    for (int i = 0; i < 64; i++) {
-
-        if (i % 16 == 0) {
-            print_string("\n");
-        }
-
-        print_hex_byte(serialized_block[i]);
-        print_char(' ');
-    }
-
-    print_string("\n\nChaCha20 block test completed.\n");
-
-    */
 
     print_string("Tests completed.\n");
     
