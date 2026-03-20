@@ -1,60 +1,132 @@
-
-#Corre solamente el ensambaldor (Terminal 1)
-chmod +x run.sh
-./run.sh
-cd /home/rvqemu-dev/workspace/examples/asm-only
-./build.sh
-./run-qemu.sh
-
-# Terminal 2
-docker exec -it rvqemu /bin/bash
-cd /home/rvqemu-dev/workspace/examples/asm-only
-gdb-multiarch test.elf
-
-
+########################################################
+# Ejecución del proyecto ChaCha20 en Docker + QEMU
 ########################################################
 
-#Corre el ensambaldor y el archivo C (Terminal 1)
-chmod +x run.sh
-./run.sh
-cd /home/rvqemu-dev/workspace/examples/c-asm
-./build.sh
-./run-qemu.sh
+
+==============================
+1. Compilar y ejecutar el programa (Terminal 1)
+==============================
+
+Dar permisos y ejecutar el script principal:
+
+    chmod +x run.sh
+    ./run.sh
+
+Entrar al directorio del proyecto:
+
+    cd /home/rvqemu-dev/workspace/chacha20
+
+Compilar el código:
+
+    ./build.sh
+
+Ejecutar el programa en QEMU con soporte para GDB:
+
+    ./run-qemu.sh
 
 
-# Terminal 2
-docker exec -it rvqemu /bin/bash
-cd /home/rvqemu-dev/workspace/examples/c-asm
-gdb-multiarch example.elf
+==============================
+2. Iniciar sesión en el contenedor y abrir GDB (Terminal 2)
+==============================
+
+Abrir una shell dentro del contenedor Docker:
+
+    docker exec -it rvqemu /bin/bash
+
+Ir al directorio del proyecto:
+
+    cd /home/rvqemu-dev/workspace/chacha20
+
+Abrir el programa con GDB:
+
+    gdb-multiarch chacha_program.elf
 
 
-#Comandos utiles 
+==============================
+3. Comandos útiles de GDB
+==============================
 
-target remote :1234
-break _start
-break main
-break sum_to_n
-layout asm
-layout regs
-continue
-step
-step
-info registers
-continue
-step
-info registers
-monitor quit
-quit
+Conectar GDB con QEMU:
+
+    target remote :1234
+
+Breakpoints comunes:
+
+    break _start
+    break main
+    break sum_to_n
+
+Visualización de código y registros:
+
+    layout asm
+    layout regs
+
+Ejecución paso a paso:
+
+    continue
+    step
+
+Consultar registros:
+
+    info registers
+
+Salir de la simulación:
+
+    monitor quit
+    quit
 
 
+==============================
+4. Inspección del estado interno (ChaCha20)
+==============================
 
-#Consultar State
-continue
-x/16wx $s0
-info registers s5
+Continuar ejecución hasta breakpoint:
 
-x/64bx &serialized_block
+    continue
 
-x/16bx (unsigned char *)$t2  # ver los primeros 16 bytes del bloque cifrado
-x/16bx (unsigned char *)$t1  # ver los primeros 16 bytes del plaintext actual
-x/16bx (unsigned char *)$t0  # ver los primeros 16 bytes del keystream
+Ver el contenido del estado apuntado por un registro:
+
+    x/16wx $s0
+
+Consultar registros específicos:
+
+    info registers s5
+
+
+==============================
+5. Inspección de buffers en memoria
+==============================
+
+Ver el bloque serializado generado:
+
+    x/64bx &serialized_block
+
+Ver los primeros 16 bytes del bloque cifrado:
+
+    x/16bx (unsigned char *)$t2
+
+Ver los primeros 16 bytes del plaintext actual:
+
+    x/16bx (unsigned char *)$t1
+
+Ver los primeros 16 bytes del keystream:
+
+    x/16bx (unsigned char *)$t0
+
+
+==============================
+6. Inspección del estado ChaCha20
+==============================
+
+Ver el estado actual (16 palabras de 32 bits):
+
+    x/16xw $state
+
+Ver el working state:
+
+    x/16xw $working_state
+
+Otra forma de visualizar los estados:
+
+    x/16xw (unsigned int*)state
+    x/16xw (unsigned int*)working_state

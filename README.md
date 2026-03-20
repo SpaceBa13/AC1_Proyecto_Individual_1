@@ -1,6 +1,6 @@
-**Brayan Alpizar Elizondo**
-**Arquitectura de Computadores I**  
-**Ingeniería en Computadores - 2026**  
+**Autor:** Brayan Alpizar Elizondo  
+**Asignatura:** Arquitectura de Computadores 1  
+**Carrera:** Ingeniería en Computadores - 2026
   
 **Proyecto:** Integración de Ensamblador RISC-V y C: ChaCha20 Stream Cipher  
 
@@ -249,6 +249,13 @@ docker exec -it rvqemu /bin/bash
 cd /home/rvqemu-dev/workspace/chacha20  
 gdb-multiarch chacha_program.elf
 ```
+### 3. Conectarse a QEMU (Terminal 2)
+
+Se debe ejecutar el siguiente comando para empezar a debuggear
+```bash 
+target remote :1234
+```
+
 
 ### Nota adicional
 

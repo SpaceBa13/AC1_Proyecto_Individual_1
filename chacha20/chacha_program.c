@@ -82,9 +82,6 @@ uint32_t blocks_2[((sizeof(message_2) + 63) / 64) * 16];
 // External assembly functions
 // ------------------------------------------------------------
 
-// Generates a 64-byte ChaCha20 keystream block using the given
-// key, counter, and nonce. Implemented in RISC-V assembly.
-extern void chacha20_block(uint32_t *key, uint32_t *counter, uint32_t *nonce);
 
 // Extern function from your assembly
 extern void quarter_round_c(uint32_t* a, uint32_t* b, uint32_t* c, uint32_t* d);
