@@ -42,51 +42,42 @@ El programa principal, escrito en **C**, se encarga de inicializar la clave, el 
 
 El repositorio está organizado de la siguiente manera:
 
-  ```bash
-
-├── Dockerfile # Define el entorno Docker con las herramientas necesarias (toolchain RISC-V y QEMU)
-
-├── README.md # Documentación principal del proyecto
-
-├── run.sh # Script para ejecutar el entorno del proyecto
-
-├── exec_guide.txt # Archivo con ejemplos de ejecución o salida del programa
-
-│
-
-├── chacha20/ # Directorio que contiene la implementación del algoritmo ChaCha20
-
-│ ├── build/ # Directorio donde se generan archivos durante la compilación
-
-│ ├── build.sh # Script para compilar el proyecto
-
-│ ├── linker.ld # Script de enlace utilizado para generar el ejecutable RISC-V
-
-│ ├── run-qemu.sh # Script para ejecutar el programa usando QEMU
-
-│ ├── debug_test.gdb # Script para iniciar una sesión de depuración con GDB
-
-│ │
-
-│ ├── chacha_program.c # Programa principal en C que invoca las funciones en ensamblador
-
-│ │
-
-│ ├── quarter_round.s # Implementación en ensamblador de la operación Quarter Round
-
-│ ├── inner_block.s # Implementación de la función Inner Block del algoritmo
-
-│ ├── chacha20_block.s # Implementación de la generación de un bloque de keystream
-
-│ ├── chacha20_encrypt.s # Implementación de la función de cifrado ChaCha20
-
-│ ├── startup.s # Código de inicialización del programa
-
-│ │
-
-│ ├── *.o # Archivos objeto generados durante la compilación
-
-│ └── chacha_program.elf # Ejecutable final para arquitectura RISC-V
+  ```C
+├── DOCUMENTACION.md // Documento técnico con explicación del algoritmo, debugging y resultados
+├── Dockerfile // Define el entorno Docker para compilar y ejecutar el proyecto en RISC-V
+├── README.md // Descripción general del proyecto y guía de ejecución
+├── bug_images // Capturas utilizadas para documentar el bug encontrado y su corrección con GDB
+│   ├── program_freezed.png 
+│   ├── step_1_bugged.png 
+│   ├── step_1_fixed.png 
+│   ├── step_2_bugged.png 
+│   └── step_2_fixed.png 
+├── chacha20 // Implementación del algoritmo ChaCha20 en ensamblador RISC-V
+│   ├── build // Directorio de archivos generados durante la compilación
+│   ├── build.sh // Script de compilación del proyecto
+│   ├── chacha20_block.s // Implementación del bloque ChaCha20
+│   ├── chacha20_encrypt.s // Implementación del proceso de cifrado
+│   ├── chacha_program.c // Programa principal en C (interfaz y pruebas)
+│   ├── chacha_program.elf // Ejecutable final para QEMU
+│   ├── debug_test.gdb // Script de debugging con GDB
+│   ├── inner_block.s // Implementación del inner block del algoritmo
+│   ├── linker.ld // Script de linker para organización de memoria
+│   ├── quarter_round.s // Implementación de la operación quarter round
+│   ├── run-qemu.sh // Script para ejecutar el programa en QEMU
+│   └── startup.s // Punto de entrada e inicialización del programa
+├── exec.txt // Programa con informacion relevante para la ejecucion
+├── result_images // Capturas de resultados intermedios del algoritmo
+│   ├── step_1.png
+│   ├── step_2.png
+│   ├── step_3.png
+│   └── step_4.png 
+├── run.sh // Script que inicializa el entorno Docker
+└── test_images // Capturas usadas para validar el algoritmo con la especificación
+    ├── resultado_final_especificacion.png 
+    ├── state_after_inner_block.png
+    ├── state_before_inner_block.png
+    ├── state_especificacion.png
+    └── state_plus_working_state.png
 
   ```
   
