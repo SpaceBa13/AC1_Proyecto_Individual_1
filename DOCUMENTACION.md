@@ -21,17 +21,17 @@ C define y almacena todos los elementos esenciales para la operación del cifrad
     
 -   **Plaintext y ciphertext**:
     
-    -   `message_1`, `message_2` → mensajes de prueba.
+    -   `message_1`, `message_2`, `message_3` → mensajes de prueba.
         
-    -   `encrypted_message`, `encrypted_message_2` → buffers de salida cifrada.
+    -   `encrypted_message`, `encrypted_message_2`, `encrypted_message_3` → buffers de salida cifrada.
         
 -   **Buffers de estado y keystream**:
     
     -   `cyphered_block[64]` → bloque de 64 bytes generado por ASM.
         
-    -   `keystream`, `keystream_2` → secuencia de bytes de keystream generada.
+    -   `keystream`, `keystream_2`,`keystream_3` → secuencia de bytes de keystream generada.
         
-    -   `blocks`, `blocks_2` → estados internos de ChaCha20 almacenados palabra por palabra (16 palabras por bloque).
+    -   `blocks`, `blocks_2`, `blocks_3` → estados internos de ChaCha20 almacenados palabra por palabra (16 palabras por bloque).
         
 
 Estos buffers permiten **almacenar y recuperar datos bloque por bloque**, facilitando la impresión, depuración y verificación con vectores de prueba.

@@ -78,6 +78,29 @@ unsigned char keystream_2[sizeof(message_2)];
 uint32_t blocks_2[((sizeof(message_2) + 63) / 64) * 16];
 
 
+// -----------------------------
+// Test Vector #3 plaintext
+// -----------------------------
+
+// Plaintext message to be encrypted
+unsigned char message_3[] =
+    "'Twas brillig, and the slithy toves "
+    "Did gyre and gimble in the wabe: "
+    "All mimsy were the borogoves, "
+    "And the mome raths outgrabe.";
+
+// Length of the plaintext
+unsigned int message_len_3 = sizeof(message_3) - 1;
+
+// Buffer to store encrypted message
+unsigned char encrypted_message_3[sizeof(message_3) - 1];
+
+// keystream
+unsigned char keystream_3[sizeof(message_3) - 1];
+
+// block states (16 words por bloque)
+uint32_t blocks_3[((sizeof(message_3) - 1 + 63) / 64) * 16];
+
 // ------------------------------------------------------------
 // External assembly functions
 // ------------------------------------------------------------
@@ -433,6 +456,82 @@ void main() {
     print_string("\nGenerated keystream:\n"); 
     print_keystream(len, keystream);
     print_string("\n\n");
+
+
+
+    // -----------------------------
+    // Test ChaCha20 Encryption (RFC 8439 Appendix A.2 - Vector #3)
+    // -----------------------------
+    print_string("// -----------------------------\n");
+    print_string("// Test ChaCha20 Encryption (RFC 8439 Appendix A.2 - Vector #3)\n");
+    print_string("// -----------------------------\n");
+
+    // Key (Test Vector #3)
+    key[0] = 0xa540921c;
+    key[1] = 0x8ad355eb;
+    key[2] = 0x868833f3;
+    key[3] = 0xf0b5f604;
+    key[4] = 0xc1173947;
+    key[5] = 0x09802b40;
+    key[6] = 0xbc5cca9d;
+    key[7] = 0xc0757020;
+
+    // Nonce
+    nonce[0] = 0x00000000;
+    nonce[1] = 0x00000000;
+    nonce[2] = 0x02000000;
+
+    // Reset index used for storing encrypted bytes
+    encrypted_index = 0;
+
+    // Counter
+    counter = 42;
+
+    len = 0;
+
+    while (message_3[len] != '\0') {
+        len++;
+    }
+
+    print_string("\n\n");
+    // Print original plaintext message
+    print_string("// Original message:\n");
+    print_string((char*)message_3);
+    print_string("\n\n");
+
+
+    // Encrypt the message using ChaCha20
+    print_string("// Encrypting message...\n");
+    chacha20_encrypt(key, &counter, nonce, message_3, len);
+
+    // ---- DEBUG OUTPUT ---- 
+    print_string("\nGenerated ChaCha20 blocks:\n"); 
+    print_blocks(len, blocks_3); 
+    print_string("\nGenerated keystream:\n"); 
+    print_keystream(len, keystream_3);
+    print_string("\n\n");
+
+
+    // Decrypt the message
+    print_string("// Decrypting message...\n");
+
+    // Reset counter to initial value for correct decryption
+    counter = 42;
+
+    // Reset index used for storing encrypted bytes
+    encrypted_index = 0;
+
+    // Decrypt by encrypting the ciphertext again with the same key and nonce
+    chacha20_encrypt(key, &counter, nonce, encrypted_message, len);
+
+    // ---- DEBUG OUTPUT ---- 
+    print_string("\nGenerated ChaCha20 blocks:\n"); 
+    print_blocks(len, blocks_3); 
+    print_string("\nGenerated keystream:\n"); 
+    print_keystream(len, keystream_3);
+    print_string("\n\n");
+
+
 
     print_string("// Tests completed.\n");
     
